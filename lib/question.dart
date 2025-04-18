@@ -1,9 +1,11 @@
-class Question {
+//Made Question class(which includes question, answer properties, and put it in List.
+class Question { // class name should start with capital letter.
 
   late String questionText;
   late bool questionAnswer;
 
-  Question({required String q, required bool a}){
+  //constructor
+  Question( String q,  bool a){
     questionText = q;
     questionAnswer = a;
   }
