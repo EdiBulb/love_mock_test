@@ -5,8 +5,9 @@ class Question { // class name should start with capital letter.
   late bool questionAnswer;
 
   //constructor
-  Question( String q,  bool a){
-    questionText = q;
-    questionAnswer = a;
-  }
+  Question(this.questionText, this.questionAnswer); // with this constructor, you can reduce code a lot.
+  // Question( String q,  bool a){
+  //   questionText = q;
+  //   questionAnswer = a;
+  // }
 }

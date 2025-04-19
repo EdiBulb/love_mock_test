@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quizzler_flutter_app/question.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+
 import 'quiz_brain.dart';
 
 //create quizBrain object.
@@ -30,12 +31,37 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-
   //List of Icon :
   List<Icon> scoreKeeper = []; // <>는 리스트의 데이터 값을 정해준다.
 
-  int questionNumber=0;
+  void checkAnswer(bool userPickedAnswer) {
+    bool correctAnswer = quizBrain.getQuestionAnswer();
 
+    setState(() {
+      if (quizBrain.isFinished() == true) {
+        Alert(
+          context: context,
+          title: 'Finished!',
+          desc: 'You\'ve reached the end of the quiz',
+        ).show();
+
+        quizBrain.reset();
+
+        scoreKeeper = [];
+      }
+
+      else {
+        if (userPickedAnswer == correctAnswer) {
+          print('user got it right!');
+          scoreKeeper.add(Icon(Icons.check, color: Colors.green));
+        } else {
+          print('user got it wrong');
+          scoreKeeper.add(Icon(Icons.close, color: Colors.red));
+        }
+        quizBrain.nextQuestion();
+      }
+    });
+  }
 
   String message = "Now, the quiz starts.";
 
@@ -51,13 +77,10 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                quizBrain.questionBank[questionNumber].questionText,
+                quizBrain.getQuestionText(),
                 // 'This is where the question text will go.',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 25.0,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 25.0, color: Colors.white),
               ),
             ),
           ),
@@ -68,30 +91,14 @@ class _QuizPageState extends State<QuizPage> {
             child: TextButton(
               style: TextButton.styleFrom(
                 backgroundColor: Colors.green,
-                foregroundColor: Colors.white, // if i use foregroundColor, no need to mention color in TextColor
+                foregroundColor:
+                    Colors
+                        .white, // if i use foregroundColor, no need to mention color in TextColor
               ),
-              child: Text(
-                'True',
-                style: TextStyle(
-                  fontSize: 20.0,
-                ),
-              ),
+              child: Text('True', style: TextStyle(fontSize: 20.0)),
               onPressed: () {
                 //The user picked true.
-
-                bool correctAnswer = quizBrain.questionBank[questionNumber].questionAnswer;
-
-                if (correctAnswer == true){
-                  print('user got it right!');
-                } else{
-                  print('user got it wrong');
-                }
-
-                setState(() {
-                  questionNumber++;
-                  // questionNumber = questionNumber +1;
-                  // questionNumber +=1;
-                });
+                checkAnswer(true);
               },
             ),
           ),
@@ -100,44 +107,22 @@ class _QuizPageState extends State<QuizPage> {
           child: Padding(
             padding: EdgeInsets.all(15.0),
             child: TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.red,
-              ),
+              style: TextButton.styleFrom(backgroundColor: Colors.red),
               child: Text(
                 'False',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  color: Colors.white,
-                ),
+                style: TextStyle(fontSize: 20.0, color: Colors.white),
               ),
               onPressed: () {
                 //The user picked false.
-                bool correctAnswer = quizBrain.questionBank[questionNumber].questionAnswer;
+                checkAnswer(false);
 
-                if (correctAnswer == false){
-                  print('user got it right!');
-                } else{
-                  print('user got it wrong');
-                }
-
-                setState(() {
-                  questionNumber++;
-                });
                 // changeText(1);
               },
             ),
           ),
         ),
-        Row(
-          children: scoreKeeper,
-        )
+        Row(children: scoreKeeper),
       ],
     );
   }
 }
-
-/*
-question1: 'You can lead a cow down stairs but not up stairs.', false,
-question2: 'Approximately one quarter of human bones are in the feet.', true,
-question3: 'A slug\'s blood is green.', true,
-*/
