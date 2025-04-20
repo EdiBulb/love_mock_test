@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/question.dart';
+import '../data/quiz_data.dart';
 
 class QuestionEditor extends StatefulWidget {
   const QuestionEditor({super.key});
@@ -10,38 +12,57 @@ class QuestionEditor extends StatefulWidget {
 class _QuestionEditorState extends State<QuestionEditor> {
   final TextEditingController _questionController = TextEditingController();
   bool _answer = true;
+  int? _editingIndex;
 
-  List<Map<String, dynamic>> _questionList = [];
-
-  void _addQuestion() {
-    if (_questionController.text.trim().isEmpty) return;
+  void _addOrUpdateQuestion() {
+    final text = _questionController.text.trim();
+    if (text.isEmpty) return;
 
     setState(() {
-      _questionList.add({
-        'text': _questionController.text.trim(),
-        'answer': _answer,
-      });
+      if (_editingIndex == null) {
+        globalQuestionList.add(Question(text, _answer));
+      } else {
+        globalQuestionList[_editingIndex!] = Question(text, _answer);
+        _editingIndex = null;
+      }
+
       _questionController.clear();
       _answer = true;
+    });
+  }
+
+  void _editQuestion(int index) {
+    setState(() {
+      _questionController.text = globalQuestionList[index].questionText;
+      _answer = globalQuestionList[index].questionAnswer;
+      _editingIndex = index;
+    });
+  }
+
+  void _deleteQuestion(int index) {
+    setState(() {
+      globalQuestionList.removeAt(index);
+      if (_editingIndex == index) {
+        _editingIndex = null;
+        _questionController.clear();
+        _answer = true;
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Add Quiz Question")),
+      appBar: AppBar(title: const Text("Manage Quiz Questions")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // 문제 입력
             TextField(
               controller: _questionController,
               decoration: const InputDecoration(labelText: "Enter question"),
             ),
             const SizedBox(height: 10),
-
-            // 정답 선택 (Toggle)
             Row(
               children: [
                 const Text("Answer is: "),
@@ -61,26 +82,35 @@ class _QuestionEditorState extends State<QuestionEditor> {
                 ),
               ],
             ),
-
             const SizedBox(height: 20),
-
             ElevatedButton(
-              onPressed: _addQuestion,
-              child: const Text("Add Question"),
+              onPressed: _addOrUpdateQuestion,
+              child: Text(_editingIndex == null ? "Add Question" : "Update Question"),
             ),
-
             const SizedBox(height: 20),
-
-            // 질문 리스트 미리 보기
             Expanded(
               child: ListView.builder(
-                itemCount: _questionList.length,
+                itemCount: globalQuestionList.length,
                 itemBuilder: (context, index) {
-                  final question = _questionList[index];
-                  return ListTile(
-                    title: Text(question['text']),
-                    subtitle: Text(
-                        "Answer: ${question['answer'] ? "True" : "False"}"),
+                  final question = globalQuestionList[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text(question.questionText),
+                      subtitle: Text("Answer: ${question.questionAnswer ? 'True' : 'False'}"),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit),
+                            onPressed: () => _editQuestion(index),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () => _deleteQuestion(index),
+                          ),
+                        ],
+                      ),
+                    ),
                   );
                 },
               ),

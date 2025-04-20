@@ -4,6 +4,7 @@ class ResultPage extends StatelessWidget {
   final int totalQuestions;
   final int correctAnswers;
   final int highScore; // highest score.
+  final String guestName;
 
   const ResultPage({
     // constructor.
@@ -11,6 +12,8 @@ class ResultPage extends StatelessWidget {
     required this.totalQuestions,
     required this.correctAnswers,
     required this.highScore, // highest score
+    required this.guestName,
+
   });
 
   @override
@@ -32,7 +35,7 @@ class ResultPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, color: Colors.white60),
             ),
             Text(
-              "🎉 You got $correctAnswers / $totalQuestions! 🎉",
+              "🎉$guestName, you got $correctAnswers / $totalQuestions! 🎉",
               style: TextStyle(fontSize: 24, color: Colors.amber, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 40),
