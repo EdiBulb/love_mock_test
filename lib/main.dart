@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:rflutter_alert/rflutter_alert.dart';
 
 import 'quiz_brain.dart';
+import 'screens/result_page.dart';
 
-//create quizBrain object.
+// create quizBrain object.
 QuizBrain quizBrain = QuizBrain();
 
-void main() => runApp(Quizzler());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // SharedPreferences 로드 전에 필요!
+  await quizBrain.loadHighScore(); // 앱 시작 시 최고 점수 불러오기
+  runApp(Quizzler());
+}
 
 class Quizzler extends StatelessWidget {
   @override
@@ -31,39 +35,44 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
-  //List of Icon :
-  List<Icon> scoreKeeper = []; // <>는 리스트의 데이터 값을 정해준다.
+  List<Icon> scoreKeeper = [];
 
-  void checkAnswer(bool userPickedAnswer) {
+  void checkAnswer(bool userPickedAnswer) async {
     bool correctAnswer = quizBrain.getQuestionAnswer();
 
+    // ✅ 정답 여부 먼저 체크하고 점수 처리
+    if (userPickedAnswer == correctAnswer) {
+      scoreKeeper.add(Icon(Icons.check, color: Colors.green));
+      quizBrain.incrementScore();
+    } else {
+      scoreKeeper.add(Icon(Icons.close, color: Colors.red));
+    }
+
+    // ✅ 점수 저장 (최고 점수 갱신 가능성 있음)
+    await quizBrain.saveHighScoreIfNeeded();
+
     setState(() {
-      if (quizBrain.isFinished() == true) {
-        Alert(
-          context: context,
-          title: 'Finished!',
-          desc: 'You\'ve reached the end of the quiz',
-        ).show();
+      if (quizBrain.isFinished()) {
+        int correctCount = quizBrain.correctCount;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResultPage(
+              totalQuestions: quizBrain.totalQuestions,
+              correctAnswers: correctCount,
+              highScore: quizBrain.highScore,
+            ),
+          ),
+        );
 
         quizBrain.reset();
-
         scoreKeeper = [];
-      }
-
-      else {
-        if (userPickedAnswer == correctAnswer) {
-          print('user got it right!');
-          scoreKeeper.add(Icon(Icons.check, color: Colors.green));
-        } else {
-          print('user got it wrong');
-          scoreKeeper.add(Icon(Icons.close, color: Colors.red));
-        }
+      } else {
         quizBrain.nextQuestion();
       }
     });
   }
-
-  String message = "Now, the quiz starts.";
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +87,6 @@ class _QuizPageState extends State<QuizPage> {
             child: Center(
               child: Text(
                 quizBrain.getQuestionText(),
-                // 'This is where the question text will go.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 25.0, color: Colors.white),
               ),
@@ -91,13 +99,10 @@ class _QuizPageState extends State<QuizPage> {
             child: TextButton(
               style: TextButton.styleFrom(
                 backgroundColor: Colors.green,
-                foregroundColor:
-                    Colors
-                        .white, // if i use foregroundColor, no need to mention color in TextColor
+                foregroundColor: Colors.white,
               ),
               child: Text('True', style: TextStyle(fontSize: 20.0)),
               onPressed: () {
-                //The user picked true.
                 checkAnswer(true);
               },
             ),
@@ -113,10 +118,7 @@ class _QuizPageState extends State<QuizPage> {
                 style: TextStyle(fontSize: 20.0, color: Colors.white),
               ),
               onPressed: () {
-                //The user picked false.
                 checkAnswer(false);
-
-                // changeText(1);
               },
             ),
           ),

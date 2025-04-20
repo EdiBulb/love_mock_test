@@ -1,9 +1,13 @@
 import 'package:quizzler_flutter_app/question.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class QuizBrain { // class name should start with capital letter.
 
   int _questionNumber=0; // private property
 
+  int _correctCount = 0;
+  int _highScore = 0;
 
   List<Question> _questionBank = [
     Question('Some cats are actually allergic to humans', true),
@@ -33,6 +37,7 @@ class QuizBrain { // class name should start with capital letter.
         true),
   ];
 
+
   void nextQuestion() {
     if (_questionNumber < _questionBank.length - 1){
       _questionNumber++;
@@ -41,17 +46,17 @@ class QuizBrain { // class name should start with capital letter.
     print(_questionBank.length);
   }
 
+  // getter
   String getQuestionText(){
     return _questionBank[_questionNumber].questionText;
   }
-
+  // getter
   bool getQuestionAnswer(){
     return _questionBank[_questionNumber].questionAnswer;
   }
 
   bool isFinished() {
     if (_questionNumber >= _questionBank.length - 1) {
-
       print('Now returning true');
       return true;
     } else {
@@ -59,7 +64,36 @@ class QuizBrain { // class name should start with capital letter.
     }
   }
 
+  int get totalQuestions => _questionBank.length;
+
+  // return score getter
+  int get correctCount => _correctCount;
+
+  // To increase score
+  void incrementScore() {
+    _correctCount++;
+  }
+
+  // 초기 실행 시 최고 점수 불러오기
+  int get highScore => _highScore;
+  // what is Future, async, await, getInstance()?
+  Future<void> loadHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    _highScore = prefs.getInt('highScore') ?? 0;
+  }
+
+  // 점수 저장
+  // what is Future, async, await, getInstance()?
+  Future<void> saveHighScoreIfNeeded() async {
+    if (_correctCount > _highScore) {
+      _highScore = _correctCount;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('highScore', _highScore);
+    }
+  }
+
   void reset() {
     _questionNumber = 0;
+    _correctCount = 0; // score reset.
   }
 }
